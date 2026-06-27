@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::core::file_policy::file_category::FileCategory;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InstalledFile {

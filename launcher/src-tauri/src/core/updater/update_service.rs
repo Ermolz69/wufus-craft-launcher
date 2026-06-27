@@ -1,39 +1,40 @@
+use super::update_plan::{UpdateAction, UpdatePlan};
 use crate::application::error::LauncherError;
+use crate::core::file_policy::policy::FilePolicy;
 use crate::core::manifest::build_manifest::BuildManifest;
 use crate::core::manifest::validation::validate_manifest;
-use crate::core::file_policy::policy::FilePolicy;
-use crate::infrastructure::network::http_client::HttpClient;
 use crate::infrastructure::cache::{cache_paths::CachePaths, manifest_cache::ManifestCache};
 use crate::infrastructure::fs::file_scanner::FileScanner;
-use super::update_plan::{UpdatePlan, UpdateAction};
+use crate::infrastructure::network::http_client::HttpClient;
 use std::path::{Path, PathBuf};
-use tracing::{warn};
+use tracing::warn;
 
 pub struct UpdateService;
 
 impl UpdateService {
     pub async fn prepare_update_plan(
-        manifest_url: &str, 
-        game_dir: &Path, 
-        cache_paths: &CachePaths
+        manifest_url: &str,
+        game_dir: &Path,
+        cache_paths: &CachePaths,
     ) -> Result<(BuildManifest, UpdatePlan), LauncherError> {
-        
         // 1. Fetch manifest
         let manifest = match HttpClient::fetch_build_manifest(manifest_url).await {
             Ok(m) => {
                 validate_manifest(&m)?;
                 let _ = ManifestCache::save(cache_paths, &m);
                 m
-            }
+            },
             Err(e) => {
                 warn!("Network error: {}. Falling back to cache.", e);
                 // Note: Realistically we need the version ID from local state, assuming "latest" for now
                 if let Ok(m) = ManifestCache::load(cache_paths, "latest") {
                     m
                 } else {
-                    return Err(LauncherError::SystemError("Failed to fetch manifest and no cache available.".into()));
+                    return Err(LauncherError::SystemError(
+                        "Failed to fetch manifest and no cache available.".into(),
+                    ));
                 }
-            }
+            },
         };
 
         // 2. Scan local directory
@@ -44,7 +45,10 @@ impl UpdateService {
         for entry in &manifest.files {
             let local_path = game_dir.join(&entry.path);
             let local_exists = local_path.exists();
-            let is_protected = manifest.protected_paths.iter().any(|p| entry.path.starts_with(p));
+            let is_protected = manifest
+                .protected_paths
+                .iter()
+                .any(|p| entry.path.starts_with(p));
 
             let local_hash = if local_exists {
                 Some("dummy_hash") // MVP
@@ -57,7 +61,7 @@ impl UpdateService {
                 local_exists,
                 local_hash,
                 Some(entry),
-                is_protected
+                is_protected,
             );
 
             plan.add(UpdateAction {
@@ -71,17 +75,16 @@ impl UpdateService {
         for local_rel_path in local_files {
             let path_str = local_rel_path.to_string_lossy().replace('\\', "/");
             let in_manifest = manifest.files.iter().any(|e| e.path == path_str);
-            let is_protected = manifest.protected_paths.iter().any(|p| path_str.starts_with(p));
+            let is_protected = manifest
+                .protected_paths
+                .iter()
+                .any(|p| path_str.starts_with(p));
 
             if !in_manifest {
-                let was_managed = false; 
+                let was_managed = false;
 
-                let decision = FilePolicy::decide_deletion(
-                    &local_rel_path,
-                    was_managed,
-                    None,
-                    is_protected
-                );
+                let decision =
+                    FilePolicy::decide_deletion(&local_rel_path, was_managed, None, is_protected);
 
                 plan.add(UpdateAction {
                     file_entry: None,

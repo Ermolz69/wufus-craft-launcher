@@ -1,18 +1,21 @@
-import { Play, Settings as SettingsIcon } from 'lucide-react';
-import '../../../shared/styles/Screens.css';
+import { Play, Settings as SettingsIcon } from 'lucide-react'
+import type { Screen } from '../../../shared/types/screens'
+import '../../../shared/styles/Screens.css'
 
 interface MainProps {
-  onNavigate: (screen: string) => void;
+  onNavigate: (screen: Screen) => void
 }
 
 export function MainPage({ onNavigate }: MainProps) {
   return (
     <div className="screen-container animate-fade-in main-screen">
-      
       <div className="main-content">
         <div className="news-panel glass-panel animate-slide-up">
           <h3>Latest News</h3>
-          <p className="news-text">Welcome to Wufus Craft! The server is currently online. Enjoy the new update with custom features.</p>
+          <p className="news-text">
+            Welcome to Wufus Craft! The server is currently online. Enjoy the new update with custom
+            features.
+          </p>
         </div>
       </div>
 
@@ -37,5 +40,5 @@ export function MainPage({ onNavigate }: MainProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

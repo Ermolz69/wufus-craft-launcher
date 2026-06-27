@@ -8,6 +8,7 @@ pub struct UpdateAction {
     pub decision: Decision,
 }
 
+#[derive(Default)]
 pub struct UpdatePlan {
     pub to_download: Vec<UpdateAction>,
     pub to_delete: Vec<UpdateAction>,
@@ -16,7 +17,7 @@ pub struct UpdatePlan {
 }
 
 impl UpdatePlan {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             to_download: Vec::new(),
             to_delete: Vec::new(),
@@ -33,8 +34,8 @@ impl UpdatePlan {
             Decision::Skip(_) => self.skipped.push(action),
             Decision::AskUser => {
                 // For MVP, we treat AskUser as Skip
-                self.skipped.push(action)
-            }
+                self.skipped.push(action);
+            },
         }
     }
 }

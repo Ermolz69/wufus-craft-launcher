@@ -1,9 +1,9 @@
-use tracing::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Mutex;
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Manager};
+use tracing::{error, info, warn};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LauncherSettings {
@@ -15,10 +15,16 @@ pub struct LauncherSettings {
 
 impl Default for LauncherSettings {
     fn default() -> Self {
-        let game_path = dirs::home_dir()
-            .map(|p| p.join("Games").join("WufusCraft").to_string_lossy().to_string())
-            .unwrap_or_else(|| "C:\\Games\\WufusCraft".to_string());
-            
+        let game_path = dirs::home_dir().map_or_else(
+            || "C:\\Games\\WufusCraft".to_string(),
+            |p| {
+                p.join("Games")
+                    .join("WufusCraft")
+                    .to_string_lossy()
+                    .to_string()
+            },
+        );
+
         Self {
             game_path,
             ram_gb: 4,
@@ -34,10 +40,11 @@ pub fn get_settings_path(app_handle: &AppHandle) -> Result<PathBuf, String> {
     let app_data_dir = app_handle
         .path()
         .app_data_dir()
-        .map_err(|e| format!("Failed to get app data dir: {}", e))?;
+        .map_err(|e| format!("Failed to get app data dir: {e}"))?;
 
     if !app_data_dir.exists() {
-        fs::create_dir_all(&app_data_dir).map_err(|e| format!("Failed to create app data dir: {}", e))?;
+        fs::create_dir_all(&app_data_dir)
+            .map_err(|e| format!("Failed to create app data dir: {e}"))?;
     }
 
     Ok(app_data_dir.join("settings.json"))
@@ -47,9 +54,9 @@ pub fn load_settings(app_handle: &AppHandle) -> LauncherSettings {
     let settings_path = match get_settings_path(app_handle) {
         Ok(path) => path,
         Err(e) => {
-            error!("Cannot determine settings path: {}", e);
+            error!("Cannot determine settings path: {e}");
             return LauncherSettings::default();
-        }
+        },
     };
 
     if !settings_path.exists() {
@@ -62,19 +69,19 @@ pub fn load_settings(app_handle: &AppHandle) -> LauncherSettings {
     let file_content = match fs::read_to_string(&settings_path) {
         Ok(content) => content,
         Err(e) => {
-            error!("Failed to read settings file: {}", e);
+            error!("Failed to read settings file: {e}");
             return LauncherSettings::default();
-        }
+        },
     };
 
     match serde_json::from_str::<LauncherSettings>(&file_content) {
         Ok(settings) => settings,
         Err(e) => {
-            warn!("Settings file is corrupted or outdated: {}. Resetting to defaults.", e);
+            warn!("Settings file is corrupted or outdated: {e}. Resetting to defaults.",);
             let default_settings = LauncherSettings::default();
             let _ = save_to_disk(&settings_path, &default_settings);
             default_settings
-        }
+        },
     }
 }
 
@@ -83,5 +90,3 @@ pub fn save_to_disk(path: &PathBuf, settings: &LauncherSettings) -> Result<(), S
     fs::write(path, json).map_err(|e| e.to_string())?;
     Ok(())
 }
-
-

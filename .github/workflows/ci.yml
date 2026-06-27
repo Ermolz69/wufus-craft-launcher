@@ -1,0 +1,121 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+# Отменяет устаревший запуск при новом push в тот же PR/ветку
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  # Инкрементальная компиляция в CI замедляет build — отключаем
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  # ──────────────────────────────────────────────────────────────────────────
+  # RUST: fmt → clippy → test
+  # ──────────────────────────────────────────────────────────────────────────
+  rust:
+    name: Rust
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: launcher/src-tauri
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Tauri требует системные библиотеки для компиляции даже без GUI
+      - name: System dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Rust stable (rustfmt + clippy)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      # Кэширует ~/.cargo/registry, ~/.cargo/git и target/ по хэшу Cargo.lock
+      - name: Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: launcher/src-tauri -> target
+
+      - name: fmt
+        run: cargo fmt --all -- --check
+
+      - name: clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: test
+        run: cargo test --all-features
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # FRONTEND: type-check → lint → prettier → build
+  # ──────────────────────────────────────────────────────────────────────────
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: launcher
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: launcher/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm type-check
+
+      - name: ESLint
+        run: pnpm lint
+
+      - name: Prettier
+        run: pnpm format:check
+
+      # Smoke build — убеждаемся что код собирается
+      - name: Build
+        run: pnpm build
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # GATE: единая точка для branch protection rule
+  # Настрой требование именно этого job в Settings → Branches
+  # ──────────────────────────────────────────────────────────────────────────
+  ci:
+    name: CI
+    needs: [rust, frontend]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: All checks passed
+        run: |
+          rust="${{ needs.rust.result }}"
+          frontend="${{ needs.frontend.result }}"
+          echo "rust=$rust  frontend=$frontend"
+          if [[ "$rust" != "success" || "$frontend" != "success" ]]; then
+            exit 1
+          fi

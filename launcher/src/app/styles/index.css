@@ -7,29 +7,29 @@
   --bg-surface-hover: #23232c;
   --bg-glass: rgba(26, 26, 32, 0.6);
   --bg-glass-heavy: rgba(15, 15, 19, 0.8);
-  
+
   --accent-primary: #8a2be2; /* Purple */
   --accent-primary-hover: #9b4ded;
   --accent-primary-glow: rgba(138, 43, 226, 0.4);
-  
+
   --accent-secondary: #ff7300; /* Orange */
-  
+
   --text-primary: #ffffff;
   --text-secondary: #a0a0ab;
   --text-muted: #6e6e76;
-  
+
   --danger: #ef4444;
   --success: #10b981;
-  
+
   --border-subtle: rgba(255, 255, 255, 0.05);
   --border-strong: rgba(255, 255, 255, 0.1);
-  
+
   --radius-sm: 6px;
   --radius-md: 12px;
   --radius-lg: 18px;
   --radius-xl: 24px;
   --radius-full: 9999px;
-  
+
   --transition-fast: 0.15s ease;
   --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-bounce: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -44,7 +44,15 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family:
+    'Outfit',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
   background-color: transparent; /* Allows Tauri to round corners */
   color: var(--text-primary);
   overflow: hidden; /* No scroll on main body */
@@ -142,7 +150,12 @@ body {
   background-clip: text;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -165,13 +178,23 @@ input:focus {
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in {

@@ -1,6 +1,6 @@
 use std::fs;
 use std::path::Path;
-use tracing::{info, error};
+use tracing::{error, info};
 
 pub struct SafeDelete;
 
@@ -12,17 +12,17 @@ impl SafeDelete {
 
         if path.is_file() {
             match fs::remove_file(path) {
-                Ok(_) => {
-                    info!("Deleted file: {:?}", path);
+                Ok(()) => {
+                    info!("Deleted file: {}", path.display());
                     Ok(())
-                }
+                },
                 Err(e) => {
-                    error!("Failed to delete file {:?}: {}", path, e);
+                    error!("Failed to delete file {}: {e}", path.display());
                     Err(e.to_string())
-                }
+                },
             }
         } else {
-            Err(format!("Path is not a file: {:?}", path))
+            Err(format!("Path is not a file: {}", path.display()))
         }
     }
 }

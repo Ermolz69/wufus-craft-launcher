@@ -1,0 +1,88 @@
+version: "3"
+
+vars:
+  LAUNCHER_DIR: "{{.ROOT_DIR}}/launcher"
+  TAURI_DIR: "{{.ROOT_DIR}}/launcher/src-tauri"
+
+tasks:
+  # ── Rust ────────────────────────────────────────────────────────────────
+
+  fmt:
+    desc: "Форматировать Rust-код"
+    dir: "{{.TAURI_DIR}}"
+    cmds:
+      - cargo fmt --all
+
+  fmt:check:
+    desc: "Проверить форматирование Rust (без изменений)"
+    dir: "{{.TAURI_DIR}}"
+    cmds:
+      - cargo fmt --all -- --check
+
+  clippy:
+    desc: "Запустить Clippy (предупреждения = ошибки)"
+    dir: "{{.TAURI_DIR}}"
+    cmds:
+      - cargo clippy --all-targets --all-features -- -D warnings
+
+  # ── TypeScript ──────────────────────────────────────────────────────────
+
+  ts:check:
+    desc: "TypeScript type-check"
+    dir: "{{.LAUNCHER_DIR}}"
+    cmds:
+      - pnpm type-check
+
+  lint:
+    desc: "ESLint"
+    dir: "{{.LAUNCHER_DIR}}"
+    cmds:
+      - pnpm lint
+
+  lint:fix:
+    desc: "ESLint с авто-исправлением"
+    dir: "{{.LAUNCHER_DIR}}"
+    cmds:
+      - pnpm lint:fix
+
+  prettier:check:
+    desc: "Prettier — только проверка"
+    dir: "{{.LAUNCHER_DIR}}"
+    cmds:
+      - pnpm format:check
+
+  prettier:fix:
+    desc: "Prettier — форматировать"
+    dir: "{{.LAUNCHER_DIR}}"
+    cmds:
+      - pnpm format
+
+  # ── Группы ──────────────────────────────────────────────────────────────
+
+  check:
+    desc: "Полная проверка: rustfmt + clippy + tsc + lint + prettier"
+    cmds:
+      - task: fmt:check
+      - task: clippy
+      - task: ts:check
+      - task: lint
+      - task: prettier:check
+
+  fix:
+    desc: "Авто-исправление: cargo fmt + eslint --fix + prettier --write"
+    cmds:
+      - task: fmt
+      - task: lint:fix
+      - task: prettier:fix
+
+  build:
+    desc: "Сборка фронтенда"
+    dir: "{{.LAUNCHER_DIR}}"
+    cmds:
+      - pnpm build
+
+  dev:
+    desc: "Dev-сервер фронтенда"
+    dir: "{{.LAUNCHER_DIR}}"
+    cmds:
+      - pnpm dev

@@ -1,37 +1,37 @@
-import { useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
-import { invoke } from '@tauri-apps/api/core';
-import '../../../shared/styles/Screens.css';
+import { useEffect } from 'react'
+import { Loader2 } from 'lucide-react'
+import { invoke } from '@tauri-apps/api/core'
+import '../../../shared/styles/Screens.css'
 
 interface SplashProps {
-  onFinish: () => void;
-  onError: (msg: string) => void;
+  onComplete: () => void
+  onError: (msg: string) => void
 }
 
-export function SplashPage({ onFinish, onError }: SplashProps) {
+export function SplashPage({ onComplete, onError }: SplashProps) {
   useEffect(() => {
-    let isMounted = true;
-    
+    let isMounted = true
+
     async function init() {
       try {
-        await invoke('initialize_fs');
-        
-        // Add artificial delay just for splash feel
+        await invoke('initialize_fs')
+
         setTimeout(() => {
-          if (isMounted) onFinish();
-        }, 1000);
-      } catch (err: any) {
-        console.error("Initialization error:", err);
-        if (isMounted) onError(err);
+          if (isMounted) onComplete()
+        }, 1000)
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err)
+        console.error('Initialization error:', err)
+        if (isMounted) onError(message)
       }
     }
-    
-    init();
+
+    init()
 
     return () => {
-      isMounted = false;
-    };
-  }, [onFinish, onError]);
+      isMounted = false
+    }
+  }, [onComplete, onError])
 
   return (
     <div className="screen-container animate-fade-in center-all">
@@ -43,5 +43,5 @@ export function SplashPage({ onFinish, onError }: SplashProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

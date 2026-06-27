@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
-use super::version_info::VersionInfo;
 use super::file_entry::FileEntry;
+use super::version_info::VersionInfo;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BuildManifest {

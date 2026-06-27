@@ -12,11 +12,11 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             let _ = infrastructure::logger::setup_logger(app.handle());
-            
+
             // Initialize settings state
             let initial_settings = core::settings::load_settings(app.handle());
             app.manage(core::settings::SettingsState(Mutex::new(initial_settings)));
-            
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

@@ -5,6 +5,26 @@ description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
 
+[lints.rust]
+unsafe_code = "forbid"
+unused_imports = "warn"
+dead_code = "warn"
+unused_variables = "warn"
+
+[lints.clippy]
+# priority = -1 чтобы отдельные правила ниже могли переопределить группы
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+# Разрешено: повторение имени модуля в типах — нормальная практика в Rust
+module_name_repetitions = "allow"
+# Разрешено: #[must_use] везде — слишком шумно
+must_use_candidate = "allow"
+# Разрешено: doc-errors/panics не обязательны в приватном коде
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+# Разрешено: множество аргументов через Builder бывает оправдано
+too_many_arguments = "allow"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]

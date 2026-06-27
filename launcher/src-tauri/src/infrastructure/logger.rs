@@ -6,12 +6,13 @@ pub fn setup_logger(app_handle: &AppHandle) -> Result<(), String> {
     let app_data_dir = app_handle
         .path()
         .app_data_dir()
-        .map_err(|e| format!("Failed to get app data dir: {}", e))?;
+        .map_err(|e| format!("Failed to get app data dir: {e}"))?;
 
     let logs_dir = app_data_dir.join("logs");
 
     if !logs_dir.exists() {
-        std::fs::create_dir_all(&logs_dir).map_err(|e| format!("Failed to create logs dir: {}", e))?;
+        std::fs::create_dir_all(&logs_dir)
+            .map_err(|e| format!("Failed to create logs dir: {e}"))?;
     }
 
     // Console output layer
@@ -23,11 +24,10 @@ pub fn setup_logger(app_handle: &AppHandle) -> Result<(), String> {
 
     // File output layer with rotation (daily)
     let file_appender = tracing_appender::rolling::daily(logs_dir, "launcher.log");
-    let (non_blocking_appender, _guard) = tracing_appender::non_blocking(file_appender);
-    
-    // We intentionally leak the guard here so the background thread stays alive 
-    // for the duration of the app. In a very strict app we might store the guard in State.
-    Box::leak(Box::new(_guard));
+    let (non_blocking_appender, guard) = tracing_appender::non_blocking(file_appender);
+
+    // Leak the guard so the background logging thread stays alive for the app's lifetime.
+    Box::leak(Box::new(guard));
 
     let file_layer = fmt::layer()
         .with_writer(non_blocking_appender)
