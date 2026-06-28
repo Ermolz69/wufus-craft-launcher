@@ -13,6 +13,20 @@ pub enum UpdateStage {
     Finalizing,
 }
 
+/// Category that lets the frontend display an appropriate user-facing message.
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ErrorKind {
+    /// Internet unavailable or download failed.
+    Network,
+    /// Not enough free disk space.
+    DiskSpace,
+    /// Filesystem permission denied.
+    FileAccess,
+    /// Everything else.
+    Internal,
+}
+
 /// All events the frontend can receive from the updater on the `updater_event` channel.
 #[derive(Clone, Serialize)]
 #[serde(tag = "type", content = "payload", rename_all = "snake_case")]
@@ -23,8 +37,8 @@ pub enum UpdaterEvent {
     Progress(ProgressSnapshot),
     /// The operation completed successfully.
     Done(ActionReport),
-    /// The operation failed with a user-facing message.
-    Error { message: String },
+    /// The operation failed. `kind` drives the UI message; `message` goes to the log.
+    Error { kind: ErrorKind, message: String },
     /// The user cancelled the operation; the build is untouched.
     Cancelled,
 }
@@ -34,8 +48,9 @@ impl UpdaterEvent {
         Self::Stage { stage: s }
     }
 
-    pub fn error(msg: impl Into<String>) -> Self {
+    pub fn error(kind: ErrorKind, msg: impl Into<String>) -> Self {
         Self::Error {
+            kind,
             message: msg.into(),
         }
     }

@@ -3,7 +3,7 @@ use crate::core::settings::SettingsState;
 use crate::core::updater::repair_report::ActionReport;
 use crate::core::updater::update_plan::UpdatePlan;
 use crate::core::updater::update_service::{UpdateService, DEFAULT_CONCURRENCY};
-use crate::event_system::updater_events::{UpdateStage, UpdaterEvent, UPDATER_EVENT};
+use crate::event_system::updater_events::{ErrorKind, UpdateStage, UpdaterEvent, UPDATER_EVENT};
 use crate::infrastructure::cache::cache_paths::CachePaths;
 use crate::infrastructure::fs::PathResolver;
 use crate::infrastructure::local_state::local_state_store::LocalStateStore;
@@ -34,6 +34,26 @@ impl Default for UpdaterState {
 fn emit(app: &AppHandle, event: UpdaterEvent) {
     if let Err(e) = app.emit(UPDATER_EVENT, event) {
         error!("Failed to emit updater event: {e}");
+    }
+}
+
+fn error_kind(e: &LauncherError) -> ErrorKind {
+    match e {
+        LauncherError::DownloadError(_) => ErrorKind::Network,
+        LauncherError::SystemError(msg) => {
+            let lower = msg.to_lowercase();
+            if lower.contains("space") || lower.contains("disk") || lower.contains("quota") {
+                ErrorKind::DiskSpace
+            } else if lower.contains("permission")
+                || lower.contains("access")
+                || lower.contains("denied")
+            {
+                ErrorKind::FileAccess
+            } else {
+                ErrorKind::Internal
+            }
+        },
+        _ => ErrorKind::Internal,
     }
 }
 
@@ -134,8 +154,9 @@ async fn run_updater(
             emit(&app, UpdaterEvent::Cancelled);
         },
         Err(e) => {
+            let kind = error_kind(&e);
             error!("{label}: failed — {e}");
-            emit(&app, UpdaterEvent::error(e.to_string()));
+            emit(&app, UpdaterEvent::error(kind, e.to_string()));
         },
     }
 }

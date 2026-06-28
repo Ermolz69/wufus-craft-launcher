@@ -88,7 +88,13 @@ tasks:
       - pnpm build
 
   dev:
-    desc: "Frontend dev server"
+    desc: "Frontend Vite dev server only (no native window)"
     dir: "{{.LAUNCHER_DIR}}"
     cmds:
       - pnpm dev
+
+  dev:tauri:
+    desc: "Full Tauri app in dev mode (Rust backend + WebView window)"
+    dir: "{{.LAUNCHER_DIR}}"
+    cmds:
+      - pnpm tauri dev

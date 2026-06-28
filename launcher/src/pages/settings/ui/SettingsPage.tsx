@@ -1,7 +1,6 @@
 import { ArrowLeft, Save, FolderOpen, RotateCcw, Loader2 } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
 import { invoke } from '@tauri-apps/api/core'
-import '../../../shared/styles/Screens.css'
 
 interface SettingsProps {
   onBack: () => void
@@ -28,9 +27,7 @@ export function SettingsPage({ onBack }: SettingsProps) {
     }
   }, [])
 
-  useEffect(() => {
-    loadSettings()
-  }, [loadSettings])
+  useEffect(() => { loadSettings() }, [loadSettings])
 
   const handleSave = async () => {
     if (!settings) return
@@ -68,108 +65,95 @@ export function SettingsPage({ onBack }: SettingsProps) {
   if (!settings) {
     return (
       <div className="screen-container center-all">
-        <Loader2 className="animate-spin" size={48} />
+        <Loader2 size={48} className="animate-spin text-accent" />
       </div>
     )
   }
 
   return (
-    <div className="screen-container animate-slide-up settings-screen">
-      <div className="settings-header">
+    <div className="screen-container animate-slide-up flex-col p-8">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-8">
         <button className="icon-btn" onClick={onBack}>
           <ArrowLeft />
         </button>
         <h2>Settings</h2>
       </div>
 
-      <div className="settings-content glass-panel" style={{ overflowY: 'auto', padding: '24px' }}>
-        <div className="settings-group">
-          <label>RAM Allocation (GB): {settings.ram_gb}GB</label>
+      {/* Content panel */}
+      <div className="glass-panel flex flex-col gap-8 max-w-[600px] p-6 overflow-y-auto">
+        {/* RAM slider */}
+        <div className="flex flex-col gap-3">
+          <label className="font-medium text-secondary">
+            RAM Allocation (GB): {settings.ram_gb}GB
+          </label>
           <input
             type="range"
             min="2"
             max="32"
             value={settings.ram_gb}
             onChange={(e) => setSettings({ ...settings, ram_gb: parseInt(e.target.value) })}
-            className="range-slider"
           />
-          <div className="range-labels">
+          <div className="flex justify-between text-[0.8rem] text-muted">
             <span>2GB</span>
             <span>32GB</span>
           </div>
         </div>
 
-        <div className="settings-group">
-          <label>Installation Path</label>
-          <div className="path-input" style={{ display: 'flex', gap: '8px' }}>
-            <input
-              type="text"
-              value={settings.game_path}
-              onChange={(e) => setSettings({ ...settings, game_path: e.target.value })}
-              style={{ flex: 1 }}
-            />
-          </div>
+        {/* Installation path */}
+        <div className="flex flex-col gap-3">
+          <label className="font-medium text-secondary">Installation Path</label>
+          <input
+            type="text"
+            value={settings.game_path}
+            onChange={(e) => setSettings({ ...settings, game_path: e.target.value })}
+          />
         </div>
 
-        <div className="settings-group" style={{ marginTop: '24px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+        {/* Checkboxes */}
+        <div className="flex flex-col gap-4">
+          <label className="flex items-center gap-2 cursor-pointer font-medium text-secondary">
             <input
               type="checkbox"
               checked={settings.close_after_launch}
               onChange={(e) => setSettings({ ...settings, close_after_launch: e.target.checked })}
+              className="accent-accent"
             />
             Close launcher after game starts
           </label>
-        </div>
-
-        <div className="settings-group" style={{ marginTop: '16px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+          <label className="flex items-center gap-2 cursor-pointer font-medium text-secondary">
             <input
               type="checkbox"
               checked={settings.minimize_on_close}
               onChange={(e) => setSettings({ ...settings, minimize_on_close: e.target.checked })}
+              className="accent-accent"
             />
             Minimize to tray on close
           </label>
         </div>
 
+        {/* Utility buttons */}
         <div
-          className="settings-group"
-          style={{
-            marginTop: '32px',
-            borderTop: '1px solid rgba(255,255,255,0.1)',
-            paddingTop: '24px',
-            display: 'flex',
-            gap: '16px',
-          }}
+          className="flex gap-4 pt-6"
+          style={{ borderTop: '1px solid var(--border-strong)' }}
         >
-          <button
-            className="btn-secondary"
-            onClick={handleReset}
-            style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '8px' }}
-          >
+          <button className="btn-secondary flex-1" onClick={handleReset}>
             <RotateCcw size={18} />
             Reset Defaults
           </button>
-          <button
-            className="btn-secondary"
-            onClick={handleOpenLogs}
-            style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '8px' }}
-          >
+          <button className="btn-secondary flex-1" onClick={handleOpenLogs}>
             <FolderOpen size={18} />
             Open Logs
           </button>
         </div>
-        {logError && (
-          <p style={{ color: 'var(--color-error, #e74c3c)', fontSize: '12px', marginTop: '8px' }}>
-            {logError}
-          </p>
-        )}
+
+        {logError && <p className="text-danger text-xs">{logError}</p>}
       </div>
 
-      <div className="settings-footer">
+      {/* Save footer */}
+      <div className="mt-8 max-w-[600px]">
         <button className="btn-primary" onClick={handleSave} disabled={isSaving}>
-          {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+          {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
           Save Changes
         </button>
       </div>

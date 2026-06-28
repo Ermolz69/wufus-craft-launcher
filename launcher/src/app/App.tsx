@@ -9,12 +9,22 @@ import { type Screen, isScreen } from '../shared/types/screens'
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('splash')
-  const [errorMsg, setErrorMsg] = useState<string>('')
+  const [errorMsg, setErrorMsg] = useState('')
+  const [errorKind, setErrorKind] = useState('internal')
+  const [updateMode, setUpdateMode] = useState<'update' | 'repair'>('update')
 
-  const handleError = (msg: string) => {
+  const handleError = (msg: string, kind = 'internal') => {
     setErrorMsg(msg)
+    setErrorKind(kind)
     setCurrentScreen('error')
   }
+
+  const handleRepair = () => {
+    setUpdateMode('repair')
+    setCurrentScreen('update')
+  }
+
+  const handleSettings = () => setCurrentScreen('settings')
 
   const renderScreen = () => {
     switch (currentScreen) {
@@ -24,13 +34,17 @@ function App() {
         return (
           <MainPage
             onNavigate={(s) => {
-              if (isScreen(s)) setCurrentScreen(s)
+              if (isScreen(s)) {
+                setUpdateMode('update')
+                setCurrentScreen(s)
+              }
             }}
           />
         )
       case 'update':
         return (
           <UpdatePage
+            mode={updateMode}
             onComplete={() => setCurrentScreen('main')}
             onError={handleError}
             onCancel={() => setCurrentScreen('main')}
@@ -39,11 +53,18 @@ function App() {
       case 'settings':
         return <SettingsPage onBack={() => setCurrentScreen('main')} />
       case 'error':
-        return <ErrorPage message={errorMsg} onRetry={() => setCurrentScreen('splash')} />
+        return (
+          <ErrorPage
+            message={errorMsg}
+            kind={errorKind}
+            onRetry={() => setCurrentScreen('splash')}
+            onRepair={handleRepair}
+          />
+        )
     }
   }
 
-  return <Layout>{renderScreen()}</Layout>
+  return <Layout onSettings={handleSettings}>{renderScreen()}</Layout>
 }
 
 export default App

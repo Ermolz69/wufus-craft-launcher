@@ -1,6 +1,5 @@
-import { Play, Settings as SettingsIcon } from 'lucide-react'
+import { Play } from 'lucide-react'
 import type { Screen } from '../../../shared/types/screens'
-import '../../../shared/styles/Screens.css'
 
 interface MainProps {
   onNavigate: (screen: Screen) => void
@@ -8,36 +7,42 @@ interface MainProps {
 
 export function MainPage({ onNavigate }: MainProps) {
   return (
-    <div className="screen-container animate-fade-in main-screen">
-      <div className="main-content">
-        <div className="news-panel glass-panel animate-slide-up">
-          <h3>Latest News</h3>
-          <p className="news-text">
+    <div className="screen-container animate-fade-in flex-col justify-between p-8">
+      {/* News panel anchored to the bottom-left of the content area */}
+      <div className="flex-1 flex items-end">
+        <div className="glass-panel animate-slide-up p-6 max-w-[400px] mb-6">
+          <h3 className="mb-3 text-[1.2rem]">Latest News</h3>
+          <p className="text-secondary leading-relaxed">
             Welcome to Wufus Craft! The server is currently online. Enjoy the new update with custom
             features.
           </p>
         </div>
       </div>
 
-      <div className="bottom-bar glass-panel animate-slide-up">
-        <div className="user-info">
-          <div className="avatar" />
-          <div className="user-details">
-            <span className="username">Player123</span>
-            <span className="status">Ready to play</span>
+      {/* Bottom bar */}
+      <div className="glass-panel animate-slide-up flex items-center justify-between px-6 py-4">
+        {/* User info */}
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-sm shrink-0 bg-surface-hover"
+            style={{ border: '1px solid var(--border-strong)' }}
+          />
+          <div className="flex flex-col">
+            <span className="font-semibold text-[1.1rem]">Player123</span>
+            <span className="text-[0.85rem] text-muted">Ready to play</span>
           </div>
         </div>
 
-        <button className="btn-primary play-btn" onClick={() => onNavigate('update')}>
+        <button
+          className="btn-primary text-[1.2rem] px-12 py-3"
+          onClick={() => onNavigate('update')}
+        >
           <Play fill="currentColor" size={24} />
           <span>PLAY</span>
         </button>
 
-        <div className="actions">
-          <button className="icon-btn" onClick={() => onNavigate('settings')}>
-            <SettingsIcon size={20} />
-          </button>
-        </div>
+        {/* Spacer to keep PLAY button visually centred */}
+        <div className="w-[120px]" />
       </div>
     </div>
   )
