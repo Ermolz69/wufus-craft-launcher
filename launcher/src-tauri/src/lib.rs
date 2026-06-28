@@ -30,6 +30,11 @@ pub fn run() {
             application::updater_commands::start_update,
             application::updater_commands::start_repair,
             application::updater_commands::cancel_update,
+            application::launch_commands::prepare_launch,
+            application::launch_commands::check_java,
+            application::launch_commands::launch_minecraft,
+            application::news_commands::fetch_news,
+            application::server_commands::check_server_status,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

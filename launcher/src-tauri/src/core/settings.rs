@@ -9,17 +9,31 @@ fn default_manifest_url() -> String {
     "https://update.example.com/manifest.json".to_string()
 }
 
+fn default_server_host() -> String {
+    "play.wufuscraft.com".to_string()
+}
+
+fn default_server_port() -> u16 {
+    25565
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LauncherSettings {
     pub game_path: String,
     pub ram_gb: u32,
     pub close_after_launch: bool,
     pub minimize_on_close: bool,
-    /// URL of the remote build manifest.
-    /// Uses a placeholder default so existing settings files without this field
-    /// still deserialise correctly.
     #[serde(default = "default_manifest_url")]
     pub manifest_url: String,
+    /// Explicit path to the `java` executable. `None` = auto-detect.
+    #[serde(default)]
+    pub java_path: Option<String>,
+    /// Minecraft server hostname for the status ping.
+    #[serde(default = "default_server_host")]
+    pub server_host: String,
+    /// Minecraft server port (default 25565).
+    #[serde(default = "default_server_port")]
+    pub server_port: u16,
 }
 
 impl Default for LauncherSettings {
@@ -40,6 +54,9 @@ impl Default for LauncherSettings {
             close_after_launch: true,
             minimize_on_close: false,
             manifest_url: default_manifest_url(),
+            java_path: None,
+            server_host: default_server_host(),
+            server_port: default_server_port(),
         }
     }
 }

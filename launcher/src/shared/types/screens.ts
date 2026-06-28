@@ -1,4 +1,4 @@
-const SCREENS = ['splash', 'main', 'update', 'settings', 'error'] as const
+const SCREENS = ['splash', 'main', 'update', 'settings', 'error', 'launching'] as const
 
 export type Screen = (typeof SCREENS)[number]
 

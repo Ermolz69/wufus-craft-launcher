@@ -1,9 +1,6 @@
-import { useEffect, useState } from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { IconLogo } from '../../../shared/icons/IconLogo'
 import { IconMinimize } from '../../../shared/icons/IconMinimize'
-import { IconMaximize } from '../../../shared/icons/IconMaximize'
-import { IconRestore } from '../../../shared/icons/IconRestore'
 import { IconClose } from '../../../shared/icons/IconClose'
 import { IconSettings } from '../../../shared/icons/IconSettings'
 
@@ -12,32 +9,16 @@ interface TitleBarProps {
 }
 
 export function TitleBar({ onSettings }: TitleBarProps) {
-  const [isMaximized, setIsMaximized] = useState(false)
-
-  useEffect(() => {
-    const win = getCurrentWindow()
-    win.isMaximized().then(setIsMaximized).catch(() => undefined)
-
-    let unlisten: (() => void) | undefined
-    win
-      .onResized(async () => { setIsMaximized(await win.isMaximized()) })
-      .then((fn) => { unlisten = fn })
-      .catch(() => undefined)
-
-    return () => unlisten?.()
-  }, [])
-
   // startDragging() is called imperatively on the drag zones only.
-  // The button area is intentionally NOT a drag zone, so buttons always
-  // receive click events — data-tauri-drag-region is NOT used anywhere.
+  // No data-tauri-drag-region is used — it intercepts mousedown on
+  // WebView2 and prevents buttons from receiving click events.
   const startDrag = (e: React.MouseEvent) => {
     if (e.button !== 0) return
     getCurrentWindow().startDragging().catch(() => undefined)
   }
 
-  const minimize      = () => getCurrentWindow().minimize().catch(() => undefined)
-  const toggleMaximize = () => getCurrentWindow().toggleMaximize().catch(() => undefined)
-  const close         = () => getCurrentWindow().close().catch(() => undefined)
+  const minimize = () => getCurrentWindow().minimize().catch(() => undefined)
+  const close    = () => getCurrentWindow().close().catch(() => undefined)
 
   const btnBase =
     'flex items-center justify-center h-full cursor-pointer select-none ' +
@@ -62,7 +43,7 @@ export function TitleBar({ onSettings }: TitleBarProps) {
       {/* Drag zone: center stretch */}
       <div className="flex-1 min-w-0 cursor-move" onMouseDown={startDrag} />
 
-      {/* Non-drag zone: window controls */}
+      {/* Non-drag zone: window controls — intentionally separate from drag handlers */}
       <div className="flex items-stretch shrink-0">
         {onSettings && (
           <>
@@ -83,14 +64,6 @@ export function TitleBar({ onSettings }: TitleBarProps) {
 
         <button className={`${btnBase} w-[46px]`} title="Minimize" onClick={minimize}>
           <IconMinimize size={12} />
-        </button>
-
-        <button
-          className={`${btnBase} w-[46px]`}
-          title={isMaximized ? 'Restore' : 'Maximize'}
-          onClick={toggleMaximize}
-        >
-          {isMaximized ? <IconRestore size={12} /> : <IconMaximize size={12} />}
         </button>
 
         <button

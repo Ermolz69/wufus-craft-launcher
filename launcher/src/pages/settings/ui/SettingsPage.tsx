@@ -1,4 +1,4 @@
-import { ArrowLeft, Save, FolderOpen, RotateCcw, Loader2 } from 'lucide-react'
+import { ArrowLeft, Save, FolderOpen, RotateCcw, Loader2, Search } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 
@@ -11,12 +11,23 @@ interface LauncherSettings {
   ram_gb: number
   close_after_launch: boolean
   minimize_on_close: boolean
+  java_path: string | null
+}
+
+interface JavaCheckResult {
+  status: 'found' | 'too_old' | 'not_found'
+  java_path: string | null
+  version: number | null
+  vendor: string | null
+  minimum_required: number
 }
 
 export function SettingsPage({ onBack }: SettingsProps) {
   const [settings, setSettings] = useState<LauncherSettings | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [logError, setLogError] = useState<string | null>(null)
+  const [javaDetecting, setJavaDetecting] = useState(false)
+  const [javaStatus, setJavaStatus] = useState<string | null>(null)
 
   const loadSettings = useCallback(async () => {
     try {
@@ -48,6 +59,26 @@ export function SettingsPage({ onBack }: SettingsProps) {
       setSettings(defaultSettings)
     } catch (e) {
       console.error('Failed to reset settings', e)
+    }
+  }
+
+  const handleDetectJava = async () => {
+    setJavaDetecting(true)
+    setJavaStatus(null)
+    try {
+      const result = await invoke<JavaCheckResult>('check_java')
+      if (result.status === 'found' && result.java_path) {
+        setSettings((s) => s ? { ...s, java_path: result.java_path } : s)
+        setJavaStatus(`✓ Java ${result.version} (${result.vendor ?? 'unknown'}) detected`)
+      } else if (result.status === 'too_old') {
+        setJavaStatus(`Java ${result.version} found but ${result.minimum_required}+ is required`)
+      } else {
+        setJavaStatus('No compatible Java found')
+      }
+    } catch {
+      setJavaStatus('Detection failed')
+    } finally {
+      setJavaDetecting(false)
     }
   }
 
@@ -108,6 +139,41 @@ export function SettingsPage({ onBack }: SettingsProps) {
             value={settings.game_path}
             onChange={(e) => setSettings({ ...settings, game_path: e.target.value })}
           />
+        </div>
+
+        {/* Java Path */}
+        <div className="flex flex-col gap-3">
+          <label className="font-medium text-secondary">
+            Java Path{' '}
+            <span className="text-muted text-[0.8rem] font-normal">(leave empty to auto-detect)</span>
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={settings.java_path ?? ''}
+              onChange={(e) =>
+                setSettings({ ...settings, java_path: e.target.value.trim() || null })
+              }
+              placeholder="Auto-detect"
+            />
+            <button
+              className="btn-secondary shrink-0 px-3"
+              onClick={handleDetectJava}
+              disabled={javaDetecting}
+              title="Auto-detect Java"
+            >
+              {javaDetecting ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Search size={16} />
+              )}
+            </button>
+          </div>
+          {javaStatus && (
+            <p className={`text-[0.8rem] ${javaStatus.startsWith('✓') ? 'text-success' : 'text-orange'}`}>
+              {javaStatus}
+            </p>
+          )}
         </div>
 
         {/* Checkboxes */}

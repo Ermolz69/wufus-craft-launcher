@@ -1,6 +1,9 @@
 pub mod file_policy;
+pub mod java;
 pub mod launcher;
 pub mod manifest;
+pub mod news;
+pub mod server_status;
 pub mod settings;
 pub mod state;
 pub mod updater;
