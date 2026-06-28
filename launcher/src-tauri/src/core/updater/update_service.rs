@@ -12,7 +12,6 @@ use crate::infrastructure::network::http_client::HttpClient;
 use std::path::Path;
 use tracing::warn;
 
-/// Default number of simultaneous downloads during an update.
 pub const DEFAULT_CONCURRENCY: usize = 3;
 
 pub struct UpdateService;

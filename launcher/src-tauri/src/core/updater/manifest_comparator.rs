@@ -21,7 +21,6 @@ impl ManifestComparator {
         let manifest_paths: HashSet<&str> =
             manifest.files.iter().map(|e| e.path.as_str()).collect();
 
-        // Step 1: every file the manifest expects
         for entry in &manifest.files {
             let local_abs = game_dir.join(&entry.path);
             let local_exists = local_abs.exists();
@@ -58,7 +57,6 @@ impl ManifestComparator {
             });
         }
 
-        // Step 2: local files absent from manifest
         for local_rel in local_files {
             let path_str = local_rel.to_string_lossy().replace('\\', "/");
             if manifest_paths.contains(path_str.as_str()) {

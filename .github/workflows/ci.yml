@@ -6,20 +6,18 @@ on:
   pull_request:
     branches: [master]
 
-# Отменяет устаревший запуск при новом push в тот же PR/ветку
+# Cancel an in-progress run when a new push arrives on the same branch/PR.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
   CARGO_TERM_COLOR: always
-  # Инкрементальная компиляция в CI замедляет build — отключаем
+  # Incremental compilation slows CI down — disable it.
   CARGO_INCREMENTAL: 0
 
 jobs:
-  # ──────────────────────────────────────────────────────────────────────────
-  # RUST: fmt → clippy → test
-  # ──────────────────────────────────────────────────────────────────────────
+  # ── Rust: fmt → clippy → test ─────────────────────────────────────────────
   rust:
     name: Rust
     runs-on: ubuntu-latest
@@ -30,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Tauri требует системные библиотеки для компиляции даже без GUI
+      # Tauri requires system libraries even for a headless compile.
       - name: System dependencies
         run: |
           sudo apt-get update
@@ -45,7 +43,7 @@ jobs:
         with:
           components: rustfmt, clippy
 
-      # Кэширует ~/.cargo/registry, ~/.cargo/git и target/ по хэшу Cargo.lock
+      # Caches ~/.cargo/registry, ~/.cargo/git, and target/ keyed on Cargo.lock.
       - name: Cache
         uses: Swatinem/rust-cache@v2
         with:
@@ -60,9 +58,7 @@ jobs:
       - name: test
         run: cargo test --all-features
 
-  # ──────────────────────────────────────────────────────────────────────────
-  # FRONTEND: type-check → lint → prettier → build
-  # ──────────────────────────────────────────────────────────────────────────
+  # ── Frontend: type-check → lint → prettier → build ────────────────────────
   frontend:
     name: Frontend
     runs-on: ubuntu-latest
@@ -97,14 +93,12 @@ jobs:
       - name: Prettier
         run: pnpm format:check
 
-      # Smoke build — убеждаемся что код собирается
+      # Smoke build — confirms the project compiles end-to-end.
       - name: Build
         run: pnpm build
 
-  # ──────────────────────────────────────────────────────────────────────────
-  # GATE: единая точка для branch protection rule
-  # Настрой требование именно этого job в Settings → Branches
-  # ──────────────────────────────────────────────────────────────────────────
+  # ── Gate: single status for branch protection ──────────────────────────────
+  # Add this job name to Settings → Branches → required status checks.
   ci:
     name: CI
     needs: [rust, frontend]

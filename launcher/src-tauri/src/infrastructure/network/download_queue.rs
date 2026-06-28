@@ -208,7 +208,6 @@ impl DownloadQueue {
             });
         }
 
-        // Drain the join set and collect the first non-cancellation error.
         let mut first_error: Option<DownloadError> = None;
         while let Some(outcome) = join_set.join_next().await {
             match outcome {
@@ -321,7 +320,6 @@ mod tests {
     fn empty_temp_dir_does_not_panic() {
         let dir = TempDir::new().unwrap();
         let plan = UpdatePlan::new();
-        // Must not panic even when temp_dir is empty.
         DownloadQueue::clean_stale_temp_files(&plan, dir.path());
     }
 }

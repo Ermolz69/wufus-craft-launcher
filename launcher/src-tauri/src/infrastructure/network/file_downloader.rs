@@ -57,7 +57,6 @@ impl FileDownloader {
     ) -> Result<PathBuf, DownloadError> {
         let temp_path = temp_dir.join(format!("{}.tmp", entry.sha256));
 
-        // Reuse a valid temp file from an interrupted previous session.
         if temp_path.exists() {
             match Self::verify_existing_temp(&temp_path, entry) {
                 Ok(()) => {
@@ -240,8 +239,6 @@ mod tests {
         path
     }
 
-    // ── verify_existing_temp ──────────────────────────────────────────────────
-
     #[test]
     fn verify_accepts_matching_temp_file() {
         let dir = TempDir::new().unwrap();
@@ -261,7 +258,6 @@ mod tests {
         let dir = TempDir::new().unwrap();
         let content = b"short";
         let entry = make_entry("mods/mod.jar", content);
-        // Write different (longer) content so size doesn't match.
         let path = dir.path().join(format!("{}.tmp", entry.sha256));
         std::fs::write(&path, b"much longer content than expected").unwrap();
 
@@ -279,7 +275,6 @@ mod tests {
         let dir = TempDir::new().unwrap();
         let content = b"original content";
         let mut entry = make_entry("mods/mod.jar", content);
-        // Corrupt the expected hash so size matches but hash doesn't.
         let tampered = b"tampered content"; // same length as "original content"
         entry.size = tampered.len() as u64;
         let path = dir.path().join(format!("{}.tmp", entry.sha256));
@@ -293,8 +288,6 @@ mod tests {
             "checksum mismatch must be detected"
         );
     }
-
-    // ── install_temp_file ─────────────────────────────────────────────────────
 
     #[test]
     fn install_creates_parent_dirs_and_moves_file() {

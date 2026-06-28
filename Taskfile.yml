@@ -5,27 +5,33 @@ vars:
   TAURI_DIR: "{{.ROOT_DIR}}/launcher/src-tauri"
 
 tasks:
-  # ── Rust ────────────────────────────────────────────────────────────────
+  # ── Rust ───────────────────────────────────────────────────────────────────
 
   fmt:
-    desc: "Форматировать Rust-код"
+    desc: "Format Rust code"
     dir: "{{.TAURI_DIR}}"
     cmds:
       - cargo fmt --all
 
   fmt:check:
-    desc: "Проверить форматирование Rust (без изменений)"
+    desc: "Check Rust formatting (read-only)"
     dir: "{{.TAURI_DIR}}"
     cmds:
       - cargo fmt --all -- --check
 
   clippy:
-    desc: "Запустить Clippy (предупреждения = ошибки)"
+    desc: "Run Clippy (warnings treated as errors)"
     dir: "{{.TAURI_DIR}}"
     cmds:
       - cargo clippy --all-targets --all-features -- -D warnings
 
-  # ── TypeScript ──────────────────────────────────────────────────────────
+  test:
+    desc: "Run Rust tests"
+    dir: "{{.TAURI_DIR}}"
+    cmds:
+      - cargo test --all-features
+
+  # ── TypeScript ─────────────────────────────────────────────────────────────
 
   ts:check:
     desc: "TypeScript type-check"
@@ -40,27 +46,27 @@ tasks:
       - pnpm lint
 
   lint:fix:
-    desc: "ESLint с авто-исправлением"
+    desc: "ESLint with auto-fix"
     dir: "{{.LAUNCHER_DIR}}"
     cmds:
       - pnpm lint:fix
 
   prettier:check:
-    desc: "Prettier — только проверка"
+    desc: "Prettier — check only"
     dir: "{{.LAUNCHER_DIR}}"
     cmds:
       - pnpm format:check
 
   prettier:fix:
-    desc: "Prettier — форматировать"
+    desc: "Prettier — format in place"
     dir: "{{.LAUNCHER_DIR}}"
     cmds:
       - pnpm format
 
-  # ── Группы ──────────────────────────────────────────────────────────────
+  # ── Groups ─────────────────────────────────────────────────────────────────
 
   check:
-    desc: "Полная проверка: rustfmt + clippy + tsc + lint + prettier"
+    desc: "Full check: rustfmt + clippy + tsc + lint + prettier"
     cmds:
       - task: fmt:check
       - task: clippy
@@ -69,20 +75,20 @@ tasks:
       - task: prettier:check
 
   fix:
-    desc: "Авто-исправление: cargo fmt + eslint --fix + prettier --write"
+    desc: "Auto-fix: cargo fmt + eslint --fix + prettier --write"
     cmds:
       - task: fmt
       - task: lint:fix
       - task: prettier:fix
 
   build:
-    desc: "Сборка фронтенда"
+    desc: "Build frontend"
     dir: "{{.LAUNCHER_DIR}}"
     cmds:
       - pnpm build
 
   dev:
-    desc: "Dev-сервер фронтенда"
+    desc: "Frontend dev server"
     dir: "{{.LAUNCHER_DIR}}"
     cmds:
       - pnpm dev

@@ -15,8 +15,6 @@ use std::sync::Mutex;
 use tauri::{AppHandle, Emitter, Manager, State};
 use tracing::{error, info};
 
-// ── State ──────────────────────────────────────────────────────────────────
-
 /// Shared state that persists for the lifetime of the app.
 /// Holds the active cancel token so `cancel_update` can stop a running task.
 pub struct UpdaterState {
@@ -32,8 +30,6 @@ impl Default for UpdaterState {
         }
     }
 }
-
-// ── Helpers ────────────────────────────────────────────────────────────────
 
 fn emit(app: &AppHandle, event: UpdaterEvent) {
     if let Err(e) = app.emit(UPDATER_EVENT, event) {
@@ -51,8 +47,6 @@ fn plan_to_report(plan: &UpdatePlan) -> ActionReport {
         files_ok: plan.skipped.len() as u64,
     }
 }
-
-// ── Core logic ─────────────────────────────────────────────────────────────
 
 /// Inner async logic shared by both update and repair commands.
 /// Returns an `ActionReport` on success, or a `LauncherError` on failure / cancellation.
@@ -123,7 +117,6 @@ async fn run_updater(
 
     let result = try_run(app.clone(), manifest_url, game_path, cancel).await;
 
-    // Release the cancel slot and running flag regardless of outcome.
     let updater_state = app.state::<UpdaterState>();
     *updater_state.cancel.lock().unwrap() = None;
     updater_state.is_running.store(false, Ordering::Release);
@@ -174,8 +167,6 @@ fn begin_run(
 
     Ok(())
 }
-
-// ── Commands ───────────────────────────────────────────────────────────────
 
 /// Starts a normal update: checks the manifest and downloads any changed or missing files.
 /// Returns immediately; progress is reported via `updater_event` Tauri events.
