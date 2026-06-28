@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use tracing::trace;
 
 /// Returns candidate `java` executable paths to probe, ordered by priority:
-/// 1. JAVA_HOME env var (user explicitly set this)
+/// 1. `JAVA_HOME` env var (user explicitly set this)
 /// 2. `java` resolved from PATH via `where`/`which`
 /// 3. Well-known vendor installation directories (Windows or Unix)
 pub fn find_java_candidates() -> Vec<PathBuf> {
@@ -44,7 +44,11 @@ fn locate_in_path() -> Option<PathBuf> {
     let stdout = String::from_utf8_lossy(&output.stdout);
     let first = stdout.lines().next()?.trim();
     let path = PathBuf::from(first);
-    if path.exists() { Some(path) } else { None }
+    if path.exists() {
+        Some(path)
+    } else {
+        None
+    }
 }
 
 #[cfg(not(target_os = "windows"))]
@@ -61,7 +65,11 @@ fn locate_in_path() -> Option<PathBuf> {
     let stdout = String::from_utf8_lossy(&output.stdout);
     let first = stdout.lines().next()?.trim();
     let path = PathBuf::from(first);
-    if path.exists() { Some(path) } else { None }
+    if path.exists() {
+        Some(path)
+    } else {
+        None
+    }
 }
 
 fn collect_from_well_known_dirs(out: &mut Vec<PathBuf>) {
@@ -87,7 +95,7 @@ fn collect_from_well_known_dirs(out: &mut Vec<PathBuf>) {
 }
 
 #[cfg(target_os = "windows")]
-fn well_known_dirs() -> &'static [&'static str] {
+const fn well_known_dirs() -> &'static [&'static str] {
     &[
         r"C:\Program Files\Eclipse Adoptium",
         r"C:\Program Files\Eclipse Foundation",
@@ -103,15 +111,12 @@ fn well_known_dirs() -> &'static [&'static str] {
 }
 
 #[cfg(target_os = "macos")]
-fn well_known_dirs() -> &'static [&'static str] {
-    &[
-        "/Library/Java/JavaVirtualMachines",
-        "/usr/lib/jvm",
-    ]
+const fn well_known_dirs() -> &'static [&'static str] {
+    &["/Library/Java/JavaVirtualMachines", "/usr/lib/jvm"]
 }
 
 #[cfg(all(not(target_os = "windows"), not(target_os = "macos")))]
-fn well_known_dirs() -> &'static [&'static str] {
+const fn well_known_dirs() -> &'static [&'static str] {
     &[
         "/usr/lib/jvm",
         "/usr/local/lib/jvm",
@@ -121,12 +126,12 @@ fn well_known_dirs() -> &'static [&'static str] {
 }
 
 #[cfg(target_os = "windows")]
-fn java_exe_name() -> &'static str {
+const fn java_exe_name() -> &'static str {
     "java.exe"
 }
 
 #[cfg(not(target_os = "windows"))]
-fn java_exe_name() -> &'static str {
+const fn java_exe_name() -> &'static str {
     "java"
 }
 

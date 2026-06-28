@@ -38,7 +38,9 @@ export function SettingsPage({ onBack }: SettingsProps) {
     }
   }, [])
 
-  useEffect(() => { loadSettings() }, [loadSettings])
+  useEffect(() => {
+    loadSettings()
+  }, [loadSettings])
 
   const handleSave = async () => {
     if (!settings) return
@@ -68,7 +70,7 @@ export function SettingsPage({ onBack }: SettingsProps) {
     try {
       const result = await invoke<JavaCheckResult>('check_java')
       if (result.status === 'found' && result.java_path) {
-        setSettings((s) => s ? { ...s, java_path: result.java_path } : s)
+        setSettings((s) => (s ? { ...s, java_path: result.java_path } : s))
         setJavaStatus(`✓ Java ${result.version} (${result.vendor ?? 'unknown'}) detected`)
       } else if (result.status === 'too_old') {
         setJavaStatus(`Java ${result.version} found but ${result.minimum_required}+ is required`)
@@ -145,7 +147,9 @@ export function SettingsPage({ onBack }: SettingsProps) {
         <div className="flex flex-col gap-3">
           <label className="font-medium text-secondary">
             Java Path{' '}
-            <span className="text-muted text-[0.8rem] font-normal">(leave empty to auto-detect)</span>
+            <span className="text-muted text-[0.8rem] font-normal">
+              (leave empty to auto-detect)
+            </span>
           </label>
           <div className="flex gap-2">
             <input
@@ -170,7 +174,9 @@ export function SettingsPage({ onBack }: SettingsProps) {
             </button>
           </div>
           {javaStatus && (
-            <p className={`text-[0.8rem] ${javaStatus.startsWith('✓') ? 'text-success' : 'text-orange'}`}>
+            <p
+              className={`text-[0.8rem] ${javaStatus.startsWith('✓') ? 'text-success' : 'text-orange'}`}
+            >
               {javaStatus}
             </p>
           )}
@@ -199,10 +205,7 @@ export function SettingsPage({ onBack }: SettingsProps) {
         </div>
 
         {/* Utility buttons */}
-        <div
-          className="flex gap-4 pt-6"
-          style={{ borderTop: '1px solid var(--border-strong)' }}
-        >
+        <div className="flex gap-4 pt-6" style={{ borderTop: '1px solid var(--border-strong)' }}>
           <button className="btn-secondary flex-1" onClick={handleReset}>
             <RotateCcw size={18} />
             Reset Defaults

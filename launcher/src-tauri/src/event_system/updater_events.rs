@@ -44,7 +44,7 @@ pub enum UpdaterEvent {
 }
 
 impl UpdaterEvent {
-    pub fn stage(s: UpdateStage) -> Self {
+    pub const fn stage(s: UpdateStage) -> Self {
         Self::Stage { stage: s }
     }
 
@@ -55,7 +55,7 @@ impl UpdaterEvent {
         }
     }
 
-    pub fn done(report: ActionReport) -> Self {
+    pub const fn done(report: ActionReport) -> Self {
         Self::Done(report)
     }
 }

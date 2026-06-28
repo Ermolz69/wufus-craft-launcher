@@ -31,10 +31,10 @@ pub fn check_server_status(settings: State<'_, SettingsState>) -> ServerStatus {
                 status.ping_ms.unwrap_or(0),
             );
             status
-        }
+        },
         Err(e) => {
             warn!("Server ping failed: {e}");
             ServerStatus::offline()
-        }
+        },
     }
 }

@@ -33,9 +33,9 @@ pub struct BuildReadiness {
 /// - `${game_dir}`      — absolute path to the game directory
 /// - `${assets_dir}`   — `{game_dir}/assets`
 /// - `${natives_dir}`  — `{game_dir}/natives`
-/// - `${username}`     — offline player name ("WufusCraft_Player")
+/// - `${username}`     — offline player name (`"WufusCraft_Player"`)
 /// - `${version}`      — `version_name` from this config
-/// - `${access_token}` — offline token literal ("offline_token")
+/// - `${access_token}` — offline token literal (`"offline_token"`)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LaunchConfig {
     /// Fully-qualified main class, e.g. "net.fabricmc.loader.impl.launch.knot.KnotClient".
@@ -87,6 +87,7 @@ impl GameLaunchParams {
         let assets_dir = game_dir.join("assets").to_string_lossy().into_owned();
         let natives_dir = game_dir.join("natives").to_string_lossy().into_owned();
 
+        #[allow(clippy::literal_string_with_formatting_args)]
         let sub = |s: &str| -> String {
             s.replace("${game_dir}", &game_dir_str)
                 .replace("${assets_dir}", &assets_dir)
@@ -109,7 +110,11 @@ impl GameLaunchParams {
 
     /// Assemble the OS `Command` (not yet spawned).
     pub fn into_command(self) -> Command {
-        let sep = if cfg!(target_os = "windows") { ";" } else { ":" };
+        let sep = if cfg!(target_os = "windows") {
+            ";"
+        } else {
+            ":"
+        };
         let cp = self
             .classpath
             .iter()

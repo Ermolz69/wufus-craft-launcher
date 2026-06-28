@@ -29,9 +29,7 @@ export function NewsCard({ item }: NewsCardProps) {
       role={item.link_url ? 'button' : undefined}
       tabIndex={item.link_url ? 0 : undefined}
       onClick={item.link_url ? open : undefined}
-      onKeyDown={
-        item.link_url ? (e) => e.key === 'Enter' && open() : undefined
-      }
+      onKeyDown={item.link_url ? (e) => e.key === 'Enter' && open() : undefined}
       className={[
         'glass-panel flex items-start gap-3 p-3 transition-colors duration-150',
         item.link_url
@@ -54,9 +52,7 @@ export function NewsCard({ item }: NewsCardProps) {
           <span className="font-semibold text-[0.88rem] leading-snug line-clamp-1 text-primary">
             {item.title}
           </span>
-          {item.link_url && (
-            <ExternalLink size={11} className="text-muted shrink-0 mt-0.5" />
-          )}
+          {item.link_url && <ExternalLink size={11} className="text-muted shrink-0 mt-0.5" />}
         </div>
         <span className="text-muted text-[0.73rem]">{item.date}</span>
         <p className="text-secondary text-[0.8rem] leading-relaxed line-clamp-2 mt-0.5">

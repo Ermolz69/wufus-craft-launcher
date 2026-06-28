@@ -7,6 +7,6 @@ pub struct JavaInfo {
     pub path: String,
     /// Major version number (8, 17, 21, …).
     pub version: u32,
-    /// Vendor string parsed from `java -version` output (e.g. "OpenJDK", "Oracle").
+    /// Vendor string parsed from `java -version` output (e.g. `"OpenJDK"`, "Oracle").
     pub vendor: String,
 }

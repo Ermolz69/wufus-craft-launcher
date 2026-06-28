@@ -14,11 +14,19 @@ export function TitleBar({ onSettings }: TitleBarProps) {
   // WebView2 and prevents buttons from receiving click events.
   const startDrag = (e: React.MouseEvent) => {
     if (e.button !== 0) return
-    getCurrentWindow().startDragging().catch(() => undefined)
+    getCurrentWindow()
+      .startDragging()
+      .catch(() => undefined)
   }
 
-  const minimize = () => getCurrentWindow().minimize().catch(() => undefined)
-  const close    = () => getCurrentWindow().close().catch(() => undefined)
+  const minimize = () =>
+    getCurrentWindow()
+      .minimize()
+      .catch(() => undefined)
+  const close = () =>
+    getCurrentWindow()
+      .close()
+      .catch(() => undefined)
 
   const btnBase =
     'flex items-center justify-center h-full cursor-pointer select-none ' +
@@ -47,11 +55,7 @@ export function TitleBar({ onSettings }: TitleBarProps) {
       <div className="flex items-stretch shrink-0">
         {onSettings && (
           <>
-            <button
-              className={`${btnBase} w-[42px]`}
-              title="Settings"
-              onClick={onSettings}
-            >
+            <button className={`${btnBase} w-[42px]`} title="Settings" onClick={onSettings}>
               <IconSettings size={15} />
             </button>
             <div

@@ -94,16 +94,13 @@ pub fn prepare_launch(
     let cache_paths = CachePaths::new(&app_data_dir);
     let cached_manifest = ManifestCache::load(&cache_paths, installed_version).ok();
 
-    let (mc_ver, loader, loader_ver) = cached_manifest.as_ref().map_or(
-        (None, None, None),
-        |m| {
-            (
-                Some(m.build.minecraft_version.clone()),
-                Some(m.build.loader.clone()),
-                Some(m.build.loader_version.clone()),
-            )
-        },
-    );
+    let (mc_ver, loader, loader_ver) = cached_manifest.as_ref().map_or((None, None, None), |m| {
+        (
+            Some(m.build.minecraft_version.clone()),
+            Some(m.build.loader.clone()),
+            Some(m.build.loader_version.clone()),
+        )
+    });
 
     // 7. Modded builds require mods/
     let is_modded = loader
@@ -200,7 +197,7 @@ pub fn launch_minecraft(
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum JavaStatus {
-    /// Java ≥ MIN_JAVA_VERSION found and ready.
+    /// Java ≥ `MIN_JAVA_VERSION` found and ready.
     Found,
     /// Java found but major version is below the minimum.
     TooOld,
@@ -216,7 +213,7 @@ pub struct JavaCheckResult {
     pub java_path: Option<String>,
     /// Major version of the found Java (e.g. 21).
     pub version: Option<u32>,
-    /// Vendor string (e.g. "OpenJDK", "Oracle").
+    /// Vendor string (e.g. `"OpenJDK"`, "Oracle").
     pub vendor: Option<String>,
     /// Minimum version required.
     pub minimum_required: u32,
@@ -243,7 +240,10 @@ pub fn check_java(
 
     // Try to find a suitable (>= MIN_JAVA_VERSION) Java
     if let Some(found) = java::find_suitable_java(explicit.as_deref()) {
-        info!("Java found: {} v{} at {}", found.vendor, found.version, found.path);
+        info!(
+            "Java found: {} v{} at {}",
+            found.vendor, found.version, found.path
+        );
 
         // Auto-save the detected path if it wasn't set explicitly, so next launch is instant.
         if current.java_path.as_deref() != Some(found.path.as_str()) {

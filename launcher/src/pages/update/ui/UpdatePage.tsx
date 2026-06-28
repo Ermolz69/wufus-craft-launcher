@@ -65,15 +65,29 @@ export function UpdatePage({ mode = 'update', onComplete, onError, onCancel }: U
     let unlistenFn: (() => void) | undefined
     listen<UpdaterEvent>('updater_event', ({ payload }) => {
       switch (payload.type) {
-        case 'stage':    setStage(payload.payload.stage); break
-        case 'progress': setProgress(payload.payload); break
-        case 'done':     cbRef.current.onComplete(); break
-        case 'error':    cbRef.current.onError(payload.payload.message, payload.payload.kind); break
-        case 'cancelled':cbRef.current.onCancel(); break
+        case 'stage':
+          setStage(payload.payload.stage)
+          break
+        case 'progress':
+          setProgress(payload.payload)
+          break
+        case 'done':
+          cbRef.current.onComplete()
+          break
+        case 'error':
+          cbRef.current.onError(payload.payload.message, payload.payload.kind)
+          break
+        case 'cancelled':
+          cbRef.current.onCancel()
+          break
       }
-    }).then((fn) => { unlistenFn = fn })
+    }).then((fn) => {
+      unlistenFn = fn
+    })
 
-    return () => { unlistenFn?.() }
+    return () => {
+      unlistenFn?.()
+    }
   }, [mode])
 
   const handleCancel = async () => {
@@ -107,7 +121,9 @@ export function UpdatePage({ mode = 'update', onComplete, onError, onCancel }: U
 
         {progress && stage === 'downloading' && (
           <div className="flex justify-between w-full text-[0.8rem] text-muted">
-            <span>{progress.completed_files}/{progress.total_files} files</span>
+            <span>
+              {progress.completed_files}/{progress.total_files} files
+            </span>
             <span>{formatSpeed(progress.bytes_per_sec)}</span>
             <span>{formatBytes(progress.remaining_bytes)} left</span>
           </div>

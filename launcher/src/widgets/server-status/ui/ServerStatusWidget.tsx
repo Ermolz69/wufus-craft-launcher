@@ -51,10 +51,7 @@ export function ServerStatusWidget() {
   }, [check])
 
   const dot = (color: string) => (
-    <span
-      className={`inline-block w-2 h-2 rounded-full shrink-0 ${color}`}
-      aria-hidden="true"
-    />
+    <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${color}`} aria-hidden="true" />
   )
 
   if (status.kind === 'checking') {

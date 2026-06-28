@@ -39,11 +39,14 @@ pub async fn fetch_news(
             info!("News fetched: {} items from {url}", fresh.len());
             news::save_cache(&cache_dir, &fresh);
             Ok(fresh)
-        }
+        },
         Err(e) => {
-            warn!("News fetch failed ({e}); serving {} cached items", cached.len());
+            warn!(
+                "News fetch failed ({e}); serving {} cached items",
+                cached.len()
+            );
             Ok(cached)
-        }
+        },
     }
 }
 
@@ -53,15 +56,13 @@ async fn fetch_from_network(url: &str) -> Result<Vec<NewsItem>, String> {
         .build()
         .map_err(|e| e.to_string())?;
 
-    let resp = client
-        .get(url)
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
+    let resp = client.get(url).send().await.map_err(|e| e.to_string())?;
 
     if !resp.status().is_success() {
         return Err(format!("HTTP {}", resp.status()));
     }
 
-    resp.json::<Vec<NewsItem>>().await.map_err(|e| e.to_string())
+    resp.json::<Vec<NewsItem>>()
+        .await
+        .map_err(|e| e.to_string())
 }

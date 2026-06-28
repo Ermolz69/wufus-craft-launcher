@@ -29,8 +29,7 @@ impl FileDownloader {
             });
         }
 
-        let actual = sha256_file(path)
-            .map_err(|e| DownloadError::FileSystem(e.to_string()))?;
+        let actual = sha256_file(path).map_err(|e| DownloadError::FileSystem(e.to_string()))?;
 
         if actual != entry.sha256 {
             return Err(DownloadError::ChecksumMismatch {
@@ -113,10 +112,7 @@ impl FileDownloader {
                 Ok(Some(chunk)) => {
                     file.write_all(&chunk).map_err(|e| {
                         let _ = std::fs::remove_file(&temp_path);
-                        DownloadError::FileSystem(format!(
-                            "Write error for '{}': {e}",
-                            entry.path
-                        ))
+                        DownloadError::FileSystem(format!("Write error for '{}': {e}", entry.path))
                     })?;
                     hasher.update(&chunk);
                     let n = chunk.len() as u64;
@@ -302,7 +298,10 @@ mod tests {
 
         assert!(dest.exists(), "destination file must exist");
         assert_eq!(std::fs::read(&dest).unwrap(), content);
-        assert!(!temp_path.exists(), "temp file must be removed after install");
+        assert!(
+            !temp_path.exists(),
+            "temp file must be removed after install"
+        );
     }
 
     #[test]

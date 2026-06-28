@@ -12,9 +12,7 @@ export function Layout({ children, onSettings }: LayoutProps) {
       <TitleBar onSettings={onSettings} />
 
       {/* Content area: pushed below titlebar, sits above glow spot */}
-      <div className="flex-1 flex flex-col mt-9 relative z-10 overflow-hidden">
-        {children}
-      </div>
+      <div className="flex-1 flex flex-col mt-9 relative z-10 overflow-hidden">{children}</div>
 
       {/* Ambient accent glow */}
       <div className="bg-glow-spot" />

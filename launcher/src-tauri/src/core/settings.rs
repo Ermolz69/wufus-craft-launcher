@@ -13,7 +13,7 @@ fn default_server_host() -> String {
     "play.wufuscraft.com".to_string()
 }
 
-fn default_server_port() -> u16 {
+const fn default_server_port() -> u16 {
     25565
 }
 

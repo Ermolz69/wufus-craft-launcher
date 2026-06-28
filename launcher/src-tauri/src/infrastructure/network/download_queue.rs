@@ -51,6 +51,7 @@ impl SharedProgress {
         })
     }
 
+    #[allow(clippy::cast_precision_loss)]
     fn snapshot(&self) -> ProgressSnapshot {
         let downloaded = self.downloaded_bytes.load(Ordering::Relaxed);
         let elapsed = self.start.elapsed().as_secs_f64();
@@ -117,6 +118,7 @@ impl DownloadQueue {
         }
     }
 
+    #[allow(clippy::too_many_lines)]
     pub async fn run<F>(
         &self,
         plan: &UpdatePlan,
@@ -142,7 +144,12 @@ impl DownloadQueue {
         // Drop the span guard before any .await to keep the future Send.
         {
             let _span = info_span!("download_queue", task = "run").entered();
-            info!(total_files, total_bytes, concurrency = self.concurrency, "Queue started");
+            info!(
+                total_files,
+                total_bytes,
+                concurrency = self.concurrency,
+                "Queue started"
+            );
         }
 
         let progress = SharedProgress::new(total_files, total_bytes);
@@ -189,14 +196,9 @@ impl DownloadQueue {
                     }
                 };
 
-                let temp_path = FileDownloader::download_to_temp(
-                    &client,
-                    &entry,
-                    &temp_dir,
-                    &cancel,
-                    on_bytes,
-                )
-                .await?;
+                let temp_path =
+                    FileDownloader::download_to_temp(&client, &entry, &temp_dir, &cancel, on_bytes)
+                        .await?;
 
                 let dest = game_dir.join(&entry.path);
                 FileDownloader::install_temp_file(&temp_path, &dest)?;
@@ -211,9 +213,8 @@ impl DownloadQueue {
         let mut first_error: Option<DownloadError> = None;
         while let Some(outcome) = join_set.join_next().await {
             match outcome {
-                Ok(Ok(())) => {},
-                Ok(Err(DownloadError::Cancelled)) => {
-                    // Expected when cancel was requested — do not propagate as a hard error.
+                Ok(Ok(()) | Err(DownloadError::Cancelled)) => {
+                    // Expected: success or user-requested cancel — not a hard error.
                 },
                 Ok(Err(e)) => {
                     warn!("Download task failed: {e}");
@@ -227,9 +228,7 @@ impl DownloadQueue {
                     error!("Download task panicked: {join_err}");
                     cancel.cancel();
                     if first_error.is_none() {
-                        first_error = Some(DownloadError::Network(
-                            "Internal task error".into(),
-                        ));
+                        first_error = Some(DownloadError::Network("Internal task error".into()));
                     }
                 },
             }

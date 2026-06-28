@@ -12,13 +12,14 @@ pub struct JavaVersion {
 /// Returns `None` if the executable cannot be run or the output cannot be parsed.
 pub fn check_java_version(java_exe: &Path) -> Option<JavaVersion> {
     // `java -version` always writes to stderr regardless of JVM vendor.
-    let output = Command::new(java_exe)
-        .arg("-version")
-        .output()
-        .ok()?;
+    let output = Command::new(java_exe).arg("-version").output().ok()?;
 
     let text = String::from_utf8_lossy(&output.stderr);
-    trace!("java -version output from {}: {}", java_exe.display(), text.trim());
+    trace!(
+        "java -version output from {}: {}",
+        java_exe.display(),
+        text.trim()
+    );
     parse_version_output(&text)
 }
 
@@ -38,20 +39,23 @@ fn parse_version_output(output: &str) -> Option<JavaVersion> {
     };
 
     // Extract the quoted version string
-    let after_open  = first_line.find('"')? + 1;
+    let after_open = first_line.find('"')? + 1;
     let after_close = first_line[after_open..].find('"')? + after_open;
     let version_str = &first_line[after_open..after_close];
 
     let major = parse_major_version(version_str)?;
-    Some(JavaVersion { major, vendor: vendor.to_string() })
+    Some(JavaVersion {
+        major,
+        vendor: vendor.to_string(),
+    })
 }
 
-/// Parse the major version from strings like "21.0.2", "17.0.9", "1.8.0_392".
+/// Parse the major version from strings like "21.0.2", "17.0.9", `"1.8.0_392"`.
 fn parse_major_version(version_str: &str) -> Option<u32> {
     let mut parts = version_str.splitn(3, ['.', '_']);
     match parts.next()? {
         "1" => parts.next()?.parse().ok(), // Legacy: "1.8" → 8
-        major => major.parse().ok(),        // Modern: "21" → 21
+        major => major.parse().ok(),       // Modern: "21" → 21
     }
 }
 

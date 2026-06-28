@@ -16,7 +16,7 @@ interface BuildInfo {
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('splash')
-  const [errorMsg, setErrorMsg]   = useState('')
+  const [errorMsg, setErrorMsg] = useState('')
   const [errorKind, setErrorKind] = useState('internal')
   const [updateMode, setUpdateMode] = useState<'update' | 'repair'>('update')
   const [buildInfo, setBuildInfo] = useState<BuildInfo>({})

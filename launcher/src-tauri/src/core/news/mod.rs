@@ -41,8 +41,8 @@ pub fn save_cache(cache_dir: &Path, news: &[NewsItem]) {
 /// Example: `https://cdn.example.com/v2/manifest.json`
 ///       →  `https://cdn.example.com/v2/news.json`
 pub fn news_url(manifest_url: &str) -> String {
-    match manifest_url.rfind('/') {
-        Some(pos) => format!("{}/news.json", &manifest_url[..pos]),
-        None => format!("{manifest_url}/news.json"),
-    }
+    manifest_url.rfind('/').map_or_else(
+        || format!("{manifest_url}/news.json"),
+        |pos| format!("{}/news.json", &manifest_url[..pos]),
+    )
 }

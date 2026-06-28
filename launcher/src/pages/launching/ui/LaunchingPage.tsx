@@ -178,8 +178,7 @@ export function LaunchingPage({ minecraftVersion, loader, loaderVersion, onBack 
           </div>
           <p className="text-muted text-[0.78rem]">
             Check the game log in{' '}
-            <span className="text-secondary">{'{game_dir}'}/logs/latest.log</span> for
-            details.
+            <span className="text-secondary">{'{game_dir}'}/logs/latest.log</span> for details.
           </p>
           <button className="btn-secondary" onClick={onBack}>
             Back to main menu
@@ -196,9 +195,7 @@ export function LaunchingPage({ minecraftVersion, loader, loaderVersion, onBack 
   const Icon = isTooOld ? AlertTriangle : XCircle
   const iconClass = isTooOld ? 'text-orange' : 'text-danger'
 
-  const errorTitle = isTooOld
-    ? `Java ${result.version} is too old`
-    : 'Java not found'
+  const errorTitle = isTooOld ? `Java ${result.version} is too old` : 'Java not found'
 
   const errorDesc = isTooOld
     ? `Minecraft requires Java ${result.minimum_required}+. You have Java ${result.version} (${result.vendor ?? 'unknown vendor'}).`
@@ -222,8 +219,8 @@ export function LaunchingPage({ minecraftVersion, loader, loaderVersion, onBack 
             Install Eclipse Temurin 21 (recommended)
           </p>
           <p className="text-[0.8rem] text-secondary leading-relaxed">
-            Eclipse Temurin is a free, production-ready OpenJDK build. Download the
-            Windows x64 installer (.msi) and run it — no configuration needed.
+            Eclipse Temurin is a free, production-ready OpenJDK build. Download the Windows x64
+            installer (.msi) and run it — no configuration needed.
           </p>
           <button
             className="btn-primary mt-1 flex items-center gap-2 text-sm px-4 py-2 self-start"

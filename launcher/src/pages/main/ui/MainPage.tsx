@@ -30,7 +30,9 @@ export function MainPage({ onNavigate, onRepair, onError, onReady }: MainProps) 
   useEffect(() => {
     invoke<NewsItem[]>('fetch_news')
       .then(setNews)
-      .catch(() => {/* already handled server-side; empty list is fine */})
+      .catch(() => {
+        /* already handled server-side; empty list is fine */
+      })
       .finally(() => setNewsLoading(false))
   }, [])
 
@@ -83,10 +85,8 @@ export function MainPage({ onNavigate, onRepair, onError, onReady }: MainProps) 
               <NewsCard key={item.id} item={item} />
             ))}
           </div>
-        ) : (
-          /* No news — section simply disappears, layout stays intact */
-          null
-        )}
+        ) : /* No news — section simply disappears, layout stays intact */
+        null}
       </div>
 
       {/* Bottom bar */}

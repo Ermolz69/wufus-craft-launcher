@@ -26,7 +26,7 @@ pub struct ServerStatus {
 }
 
 impl ServerStatus {
-    pub fn online(players: u32, max_players: u32, ping_ms: u64, version: String) -> Self {
+    pub const fn online(players: u32, max_players: u32, ping_ms: u64, version: String) -> Self {
         Self {
             state: ServerState::Online,
             players: Some(players),
@@ -36,7 +36,7 @@ impl ServerStatus {
         }
     }
 
-    pub fn offline() -> Self {
+    pub const fn offline() -> Self {
         Self {
             state: ServerState::Offline,
             players: None,
@@ -63,9 +63,8 @@ pub fn ping(host: &str, port: u16) -> Result<ServerStatus, String> {
 
     let start = Instant::now();
 
-    let mut stream =
-        TcpStream::connect_timeout(&socket_addr, Duration::from_secs(3))
-            .map_err(|e| format!("Connect: {e}"))?;
+    let mut stream = TcpStream::connect_timeout(&socket_addr, Duration::from_secs(3))
+        .map_err(|e| format!("Connect: {e}"))?;
 
     stream.set_read_timeout(Some(Duration::from_secs(3))).ok();
     stream.set_write_timeout(Some(Duration::from_secs(3))).ok();
@@ -83,10 +82,9 @@ pub fn ping(host: &str, port: u16) -> Result<ServerStatus, String> {
     stream.flush().map_err(|e| format!("Flush: {e}"))?;
 
     // 3 — Read status response
-    let json = read_string_packet(&mut stream)
-        .map_err(|e| format!("Status response: {e}"))?;
+    let json = read_string_packet(&mut stream).map_err(|e| format!("Status response: {e}"))?;
 
-    let ping_ms = start.elapsed().as_millis() as u64;
+    let ping_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
 
     debug!(
         "SLP response ({ping_ms} ms): {}",
@@ -97,8 +95,8 @@ pub fn ping(host: &str, port: u16) -> Result<ServerStatus, String> {
     let value: serde_json::Value =
         serde_json::from_str(&json).map_err(|e| format!("JSON parse: {e}"))?;
 
-    let players = value["players"]["online"].as_u64().unwrap_or(0) as u32;
-    let max = value["players"]["max"].as_u64().unwrap_or(0) as u32;
+    let players = u32::try_from(value["players"]["online"].as_u64().unwrap_or(0)).unwrap_or(0);
+    let max = u32::try_from(value["players"]["max"].as_u64().unwrap_or(0)).unwrap_or(0);
     let version = value["version"]["name"]
         .as_str()
         .unwrap_or("Unknown")
@@ -109,7 +107,8 @@ pub fn ping(host: &str, port: u16) -> Result<ServerStatus, String> {
 
 // ── SLP packet helpers ─────────────────────────────────────────────────────
 
-/// Encode a VarInt (little-endian 7-bit groups, MSB = continuation).
+/// Encode a `VarInt` (little-endian 7-bit groups, MSB = continuation).
+#[allow(clippy::cast_sign_loss, clippy::cast_possible_wrap)]
 fn varint(mut value: i32) -> Vec<u8> {
     let mut buf = Vec::with_capacity(5);
     loop {
@@ -126,16 +125,16 @@ fn varint(mut value: i32) -> Vec<u8> {
     buf
 }
 
-/// Decode a VarInt from a `Read` source.
+/// Decode a `VarInt` from a `Read` source.
 fn read_varint(r: &mut impl Read) -> io::Result<i32> {
     let mut value = 0u32;
     let mut shift = 0u32;
     loop {
         let mut b = [0u8; 1];
         r.read_exact(&mut b)?;
-        value |= ((b[0] & 0x7F) as u32) << shift;
+        value |= u32::from(b[0] & 0x7F) << shift;
         if b[0] & 0x80 == 0 {
-            return Ok(value as i32);
+            return Ok(value.cast_signed());
         }
         shift += 7;
         if shift >= 35 {
@@ -150,14 +149,14 @@ fn read_varint(r: &mut impl Read) -> io::Result<i32> {
 /// Encode a Minecraft String: `[VarInt length][UTF-8 bytes]`.
 fn mc_string(s: &str) -> Vec<u8> {
     let bytes = s.as_bytes();
-    let mut buf = varint(bytes.len() as i32);
+    let mut buf = varint(i32::try_from(bytes.len()).unwrap_or(0));
     buf.extend_from_slice(bytes);
     buf
 }
 
 /// Wrap payload in a Minecraft packet frame: `[VarInt total_length][payload]`.
 fn framed(payload: &[u8]) -> Vec<u8> {
-    let mut buf = varint(payload.len() as i32);
+    let mut buf = varint(i32::try_from(payload.len()).unwrap_or(0));
     buf.extend_from_slice(payload);
     buf
 }
@@ -176,21 +175,26 @@ fn build_status_request() -> Vec<u8> {
     framed(&varint(0x00)) // Packet ID 0x00, no fields
 }
 
+/// 512 KB sanity cap on SLP status response length.
+const MAX_RESPONSE: u32 = 512 * 1024;
+
 /// Read a single framed status-response packet and return the inner JSON string.
 fn read_string_packet(r: &mut impl Read) -> io::Result<String> {
     let _frame_len = read_varint(r)?;
     let _packet_id = read_varint(r)?;
     let str_len = read_varint(r)?;
 
-    const MAX_RESPONSE: i32 = 512 * 1024; // 512 KB sanity cap
-    if str_len < 0 || str_len > MAX_RESPONSE {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidData,
-            format!("Unexpected response length: {str_len}"),
-        ));
-    }
+    let buf_len = u32::try_from(str_len)
+        .ok()
+        .filter(|&n| n <= MAX_RESPONSE)
+        .ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("Unexpected response length: {str_len}"),
+            )
+        })? as usize;
 
-    let mut buf = vec![0u8; str_len as usize];
+    let mut buf = vec![0u8; buf_len];
     r.read_exact(&mut buf)?;
     String::from_utf8(buf).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
 }

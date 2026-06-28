@@ -14,7 +14,9 @@ export function SplashPage({ onComplete, onError }: SplashProps) {
     async function init() {
       try {
         await invoke('initialize_fs')
-        setTimeout(() => { if (isMounted) onComplete() }, 1000)
+        setTimeout(() => {
+          if (isMounted) onComplete()
+        }, 1000)
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err)
         console.error('Initialization error:', err)
@@ -23,7 +25,9 @@ export function SplashPage({ onComplete, onError }: SplashProps) {
     }
 
     init()
-    return () => { isMounted = false }
+    return () => {
+      isMounted = false
+    }
   }, [onComplete, onError])
 
   return (

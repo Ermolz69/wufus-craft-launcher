@@ -57,11 +57,9 @@ fn error_kind(e: &LauncherError) -> ErrorKind {
     }
 }
 
-fn plan_to_report(plan: &UpdatePlan) -> ActionReport {
+const fn plan_to_report(plan: &UpdatePlan) -> ActionReport {
     ActionReport {
-        files_checked: (plan.to_download.len()
-            + plan.to_delete.len()
-            + plan.skipped.len()) as u64,
+        files_checked: (plan.to_download.len() + plan.to_delete.len() + plan.skipped.len()) as u64,
         files_restored: plan.to_download.len() as u64,
         files_deleted: plan.to_delete.len() as u64,
         files_ok: plan.skipped.len() as u64,
@@ -178,13 +176,7 @@ fn begin_run(
     let cancel = CancelToken::new();
     *updater.cancel.lock().unwrap() = Some(cancel.clone());
 
-    tauri::async_runtime::spawn(run_updater(
-        app,
-        manifest_url,
-        game_path,
-        cancel,
-        label,
-    ));
+    tauri::async_runtime::spawn(run_updater(app, manifest_url, game_path, cancel, label));
 
     Ok(())
 }
@@ -192,6 +184,7 @@ fn begin_run(
 /// Starts a normal update: checks the manifest and downloads any changed or missing files.
 /// Returns immediately; progress is reported via `updater_event` Tauri events.
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 pub fn start_update(
     app: AppHandle,
     updater: State<'_, UpdaterState>,
@@ -202,9 +195,11 @@ pub fn start_update(
 }
 
 /// Starts a full integrity check and restores any corrupted or missing files.
+///
 /// Functionally identical to `start_update` — both use the same manifest comparison
 /// pipeline. The distinction is semantic: Repair is user-triggered.
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 pub fn start_repair(
     app: AppHandle,
     updater: State<'_, UpdaterState>,
@@ -217,6 +212,7 @@ pub fn start_repair(
 /// Signals the active update or repair to stop after the current chunk.
 /// The installed build is left untouched; the operation can be resumed later.
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 pub fn cancel_update(updater: State<'_, UpdaterState>) {
     if let Some(token) = updater.cancel.lock().unwrap().as_ref() {
         token.cancel();
