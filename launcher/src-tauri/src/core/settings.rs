@@ -5,12 +5,21 @@ use std::sync::Mutex;
 use tauri::{AppHandle, Manager};
 use tracing::{error, info, warn};
 
+fn default_manifest_url() -> String {
+    "https://update.example.com/manifest.json".to_string()
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LauncherSettings {
     pub game_path: String,
     pub ram_gb: u32,
     pub close_after_launch: bool,
     pub minimize_on_close: bool,
+    /// URL of the remote build manifest.
+    /// Uses a placeholder default so existing settings files without this field
+    /// still deserialise correctly.
+    #[serde(default = "default_manifest_url")]
+    pub manifest_url: String,
 }
 
 impl Default for LauncherSettings {
@@ -30,6 +39,7 @@ impl Default for LauncherSettings {
             ram_gb: 4,
             close_after_launch: true,
             minimize_on_close: false,
+            manifest_url: default_manifest_url(),
         }
     }
 }

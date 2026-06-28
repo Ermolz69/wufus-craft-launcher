@@ -26,6 +26,18 @@ impl UpdatePlan {
         }
     }
 
+    pub fn download_size_bytes(&self) -> u64 {
+        self.to_download
+            .iter()
+            .filter_map(|a| a.file_entry.as_ref())
+            .map(|e| e.size)
+            .sum()
+    }
+
+    pub const fn is_up_to_date(&self) -> bool {
+        self.to_download.is_empty() && self.to_delete.is_empty() && self.to_backup.is_empty()
+    }
+
     pub fn add(&mut self, action: UpdateAction) {
         match action.decision {
             Decision::Install | Decision::Update => self.to_download.push(action),

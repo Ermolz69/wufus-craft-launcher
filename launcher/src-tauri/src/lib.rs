@@ -13,9 +13,9 @@ pub fn run() {
         .setup(|app| {
             let _ = infrastructure::logger::setup_logger(app.handle());
 
-            // Initialize settings state
             let initial_settings = core::settings::load_settings(app.handle());
             app.manage(core::settings::SettingsState(Mutex::new(initial_settings)));
+            app.manage(application::updater_commands::UpdaterState::default());
 
             Ok(())
         })
@@ -26,7 +26,10 @@ pub fn run() {
             application::commands::open_logs_folder,
             application::commands::get_settings,
             application::commands::save_settings,
-            application::commands::reset_settings
+            application::commands::reset_settings,
+            application::updater_commands::start_update,
+            application::updater_commands::start_repair,
+            application::updater_commands::cancel_update,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

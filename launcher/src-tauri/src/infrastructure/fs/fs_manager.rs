@@ -13,13 +13,9 @@ impl FsManager {
 
         Self::validate_path(&paths.game)?;
 
-        if paths.temp.exists() {
-            info!("Cleaning up temp directory: {}", paths.temp.display());
-            if let Err(e) = fs::remove_dir_all(&paths.temp) {
-                warn!("Failed to completely clean temp directory: {e}");
-            }
-        }
-
+        // Temp dir is intentionally preserved across restarts so that a
+        // partially-downloaded update can be resumed without re-fetching files.
+        // Stale temp files are cleaned selectively at the start of each update run.
         Self::ensure_dir_rw(&paths.cache)?;
         Self::ensure_dir_rw(&paths.temp)?;
         Self::ensure_dir_rw(&paths.logs)?;

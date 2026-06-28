@@ -1,13 +1,19 @@
-use super::update_plan::{UpdateAction, UpdatePlan};
+use super::manifest_comparator::ManifestComparator;
+use super::update_plan::UpdatePlan;
 use crate::application::error::LauncherError;
-use crate::core::file_policy::policy::FilePolicy;
 use crate::core::manifest::build_manifest::BuildManifest;
 use crate::core::manifest::validation::validate_manifest;
+use crate::core::state::local_state::LocalState;
 use crate::infrastructure::cache::{cache_paths::CachePaths, manifest_cache::ManifestCache};
 use crate::infrastructure::fs::file_scanner::FileScanner;
+use crate::infrastructure::network::cancel_token::CancelToken;
+use crate::infrastructure::network::download_queue::{DownloadQueue, ProgressSnapshot};
 use crate::infrastructure::network::http_client::HttpClient;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use tracing::warn;
+
+/// Default number of simultaneous downloads during an update.
+pub const DEFAULT_CONCURRENCY: usize = 3;
 
 pub struct UpdateService;
 
@@ -16,8 +22,8 @@ impl UpdateService {
         manifest_url: &str,
         game_dir: &Path,
         cache_paths: &CachePaths,
+        local_state: &LocalState,
     ) -> Result<(BuildManifest, UpdatePlan), LauncherError> {
-        // 1. Fetch manifest
         let manifest = match HttpClient::fetch_build_manifest(manifest_url).await {
             Ok(m) => {
                 validate_manifest(&m)?;
@@ -25,75 +31,41 @@ impl UpdateService {
                 m
             },
             Err(e) => {
-                warn!("Network error: {}. Falling back to cache.", e);
-                // Note: Realistically we need the version ID from local state, assuming "latest" for now
-                if let Ok(m) = ManifestCache::load(cache_paths, "latest") {
-                    m
-                } else {
-                    return Err(LauncherError::SystemError(
+                warn!("Network error: {e}. Falling back to cache.");
+                ManifestCache::load(cache_paths, "latest").map_err(|_| {
+                    LauncherError::SystemError(
                         "Failed to fetch manifest and no cache available.".into(),
-                    ));
-                }
+                    )
+                })?
             },
         };
 
-        // 2. Scan local directory
         let local_files = FileScanner::scan_directory(game_dir);
-        let mut plan = UpdatePlan::new();
-
-        // 3. Evaluate manifest files
-        for entry in &manifest.files {
-            let local_path = game_dir.join(&entry.path);
-            let local_exists = local_path.exists();
-            let is_protected = manifest
-                .protected_paths
-                .iter()
-                .any(|p| entry.path.starts_with(p));
-
-            let local_hash = if local_exists {
-                Some("dummy_hash") // MVP
-            } else {
-                None
-            };
-
-            let decision = FilePolicy::decide(
-                Path::new(&entry.path),
-                local_exists,
-                local_hash,
-                Some(entry),
-                is_protected,
-            );
-
-            plan.add(UpdateAction {
-                file_entry: Some(entry.clone()),
-                local_path: PathBuf::from(&entry.path),
-                decision,
-            });
-        }
-
-        // 4. Evaluate unknown local files
-        for local_rel_path in local_files {
-            let path_str = local_rel_path.to_string_lossy().replace('\\', "/");
-            let in_manifest = manifest.files.iter().any(|e| e.path == path_str);
-            let is_protected = manifest
-                .protected_paths
-                .iter()
-                .any(|p| path_str.starts_with(p));
-
-            if !in_manifest {
-                let was_managed = false;
-
-                let decision =
-                    FilePolicy::decide_deletion(&local_rel_path, was_managed, None, is_protected);
-
-                plan.add(UpdateAction {
-                    file_entry: None,
-                    local_path: local_rel_path.clone(),
-                    decision,
-                });
-            }
-        }
+        let plan = ManifestComparator::compare(&manifest, local_state, &local_files, game_dir);
 
         Ok((manifest, plan))
+    }
+
+    /// Executes an update plan with bounded parallel downloads.
+    ///
+    /// Files are staged in `temp_dir`, verified, then atomically moved into `game_dir`.
+    /// The installed build is never modified until a file passes both size and checksum checks.
+    ///
+    /// Returns `Err(UpdateCancelled)` if `cancel` was triggered without a download error.
+    /// Returns `Err(DownloadError(_))` on the first hard failure.
+    pub async fn execute_plan<F>(
+        plan: &UpdatePlan,
+        game_dir: &Path,
+        temp_dir: &Path,
+        concurrency: usize,
+        cancel: CancelToken,
+        on_progress: F,
+    ) -> Result<(), LauncherError>
+    where
+        F: Fn(ProgressSnapshot) + Send + Sync + 'static,
+    {
+        DownloadQueue::new(concurrency)
+            .run(plan, game_dir, temp_dir, cancel, on_progress)
+            .await
     }
 }

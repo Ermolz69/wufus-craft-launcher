@@ -10,4 +10,18 @@ pub enum DownloadError {
     FileSystem(String),
     #[error("Invalid data: {0}")]
     InvalidData(String),
+    #[error("Checksum mismatch for '{path}': expected {expected}, got {actual}")]
+    ChecksumMismatch {
+        path: String,
+        expected: String,
+        actual: String,
+    },
+    #[error("Size mismatch for '{path}': expected {expected} bytes, got {actual} bytes")]
+    SizeMismatch {
+        path: String,
+        expected: u64,
+        actual: u64,
+    },
+    #[error("Download was cancelled")]
+    Cancelled,
 }

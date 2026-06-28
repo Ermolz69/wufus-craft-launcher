@@ -1,3 +1,4 @@
+use crate::infrastructure::network::ProgressSnapshot;
 use serde::Serialize;
 
 #[derive(Clone, Serialize)]
@@ -12,4 +13,6 @@ pub struct LogEvent {
     pub message: String,
 }
 
-// In the future we will use tauri::Emitter to emit these events to React.
+/// Emitted on the `update://progress` channel during an active update.
+/// Mirrors [`ProgressSnapshot`] but is the canonical frontend event type.
+pub type UpdateProgressEvent = ProgressSnapshot;

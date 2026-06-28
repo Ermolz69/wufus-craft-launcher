@@ -1,3 +1,4 @@
+use crate::infrastructure::network::download_error::DownloadError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -8,7 +9,10 @@ pub enum LauncherError {
     SettingsWriteError(String),
     #[error("System error: {0}")]
     SystemError(String),
-    // other errors will go here
+    #[error("Download failed: {0}")]
+    DownloadError(#[from] DownloadError),
+    #[error("Update was cancelled by user")]
+    UpdateCancelled,
 }
 
 impl serde::Serialize for LauncherError {
